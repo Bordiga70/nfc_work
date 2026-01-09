@@ -5,26 +5,24 @@ use axum::{
 };
 
 use sqlite::{
-	State,
-	Connection,
+    State,
+    Connection,
 };
 
 use std::fmt::{
-	Debug,
-	Formatter,
+    Debug,
+    Formatter,
 };
 
 use serde::{
-	Serialize,
-	Deserialize,
+    Serialize,
+    Deserialize,
 };
 
 #[tokio::main]
 async fn main() {
-
-
     let app = Router::new()
-    	.route("/login", post(test));
+    	.route("/login", post(do_login));
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();
     println!("server ready!");
@@ -32,13 +30,14 @@ async fn main() {
 }
 
 fn connect_to_db(path: &str) -> Connection {
-	let connection = match sqlite::open(path) {
-		Ok(connection) => connection,
-		Err(_) => panic!("Impossibile connettersi al DB"),
-	};
-	connection
+     let connection = match sqlite::open(path) {
+	Ok(connection) => connection,
+	Err(_) => panic!("Impossibile connettersi al DB"),
+     };
+     connection
 }
-async fn check_login(username: &String, password: &String) ->  bool {
+
+async fn verify_login(username: &String, password: &String) ->  bool {
     let connection = connect_to_db(r"data.db");
 
     let query = "SELECT * FROM Login";
@@ -55,19 +54,20 @@ async fn check_login(username: &String, password: &String) ->  bool {
     return false;
 }
 
-async fn test(Json(payload): Json<LoginRequest>) -> (StatusCode, Json<CreateLoginResponse>) {
+async fn do_login(Json(payload): Json<LoginRequest>) -> (StatusCode, Json<CreateLoginResponse>) {
 
-     println!("{}", payload.username);
-     println!("{}", payload.password);
+    println!("received username: {}", payload.username);
+    println!("received password: {}", payload.password);
 
-    let l = CreateLoginResponse{
+    let l = CreateLoginResponse {
 	message: format!("message"),
-	};
+    };
 
-    if check_login(&payload.username, &payload.password).await {
-    return (StatusCode::CREATED, Json(l));	
-}
-return (StatusCode::NOT_FOUND, Json(l));
+    if verify_login(&payload.username, &payload.password).await {
+    	return (StatusCode::CREATED, Json(l));	
+    }
+
+    return (StatusCode::NOT_FOUND, Json(l));
 }
 
 #[derive(Deserialize)]
