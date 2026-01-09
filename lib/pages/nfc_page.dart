@@ -36,9 +36,9 @@ class _NfcPageState extends State<NfcPage> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () async {
-                    var response = await http.get(new Uri.http(url, '/login'));
+                    var response = await http.get(new Uri.http(url, '/verify'));
                     print(response.statusCode);
-                    if (response.body == 'foo') {
+                    if (response.statusCode == 201) {
                       setState(() {
                         success = !success;
                       });

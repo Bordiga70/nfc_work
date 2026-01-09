@@ -67,14 +67,15 @@ class _LoginPageState extends State<LoginPage> {
                     if (userController.text.isNotEmpty &&
                         pswController.text.isNotEmpty &&
                         response.statusCode == 201) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return NfcPage();
-                          },
-                        ),
-                      );
+                      print(true);
+                      // Navigator.pushReplacement(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) {
+                      //       return NfcPage();
+                      //     },
+                      //   ),
+                      // );
                     } else {
                       DialogWidget().dialog(context);
                     }
