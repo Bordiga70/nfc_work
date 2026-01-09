@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:untitled/pages/nfc_page.dart';
 import 'package:untitled/widgets/dialog_widget.dart';
 
+import '../data/user_data.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -67,15 +69,18 @@ class _LoginPageState extends State<LoginPage> {
                     if (userController.text.isNotEmpty &&
                         pswController.text.isNotEmpty &&
                         response.statusCode == 201) {
-                      print(true);
-                      // Navigator.pushReplacement(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) {
-                      //       return NfcPage();
-                      //     },
-                      //   ),
-                      // );
+                      final userMap =
+                          jsonDecode(response.body) as Map<String, dynamic>;
+                      final user = UserData.fromJson(userMap);
+                      print(user.cognome);
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return NfcPage();
+                          },
+                        ),
+                      );
                     } else {
                       DialogWidget().dialog(context);
                     }

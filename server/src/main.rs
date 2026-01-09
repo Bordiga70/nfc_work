@@ -1,5 +1,5 @@
 use axum::{
-    routing::{get, post},
+    routing::{post},
     http::StatusCode,
     Router, Json,
 };
@@ -13,6 +13,26 @@ use serde::{
     Serialize,
     Deserialize,
 };
+
+#[derive(Serialize)]
+struct Person {
+	id: i64,
+	codice_fiscale: String,
+	nome: String,
+	cognome: String,
+}
+
+impl Default for Person {
+	fn default() -> Person {
+    		Person { id: 0, codice_fiscale: format!("DEFAULT"), nome: format!("DEFAULT"), cognome: format!("DEFAULT") }
+    }
+}
+
+#[derive(Deserialize)]
+struct LoginRequest {
+	username: String,
+	password: String,
+}
 
 #[tokio::main]
 async fn main() {
@@ -33,15 +53,7 @@ fn connect_to_db(path: &str) -> Connection {
      connection
 }
 
-#[derive(Debug)]
-struct Person {
-	id: i64,
-	codice_fiscale: String,
-	nome: String,
-	cognome: String,
-}
-
-async fn create_user(username: &String, password: &String) -> Option<Person> {
+async fn create_user(username: String, password: String) -> Option<Person> {
     let connection = connect_to_db(r"data.db");
 	
     let query =	format!("SELECT id_persona FROM Login WHERE username = '{}' AND password = '{}'", username, password);
@@ -52,8 +64,6 @@ async fn create_user(username: &String, password: &String) -> Option<Person> {
     }
 
     let person_id = statement.read::<i64, _>("id_persona").unwrap();
-
-    println!("person id: {}", person_id);
     	
     let query = format!("SELECT * FROM Persona WHERE id = '{}'", person_id);
     let mut statement = connection.prepare(query).unwrap();
@@ -71,7 +81,7 @@ async fn create_user(username: &String, password: &String) -> Option<Person> {
     return Some(p);
 }
 
-async fn verify_login(username: &String, password: &String) ->  bool {
+async fn verify_login(username: String, password: String) ->  bool {
     let connection = connect_to_db(r"data.db");
 	
     let query =	format!("SELECT id_persona FROM Login WHERE username = '{}' AND password = '{}'", username, password);
@@ -87,31 +97,17 @@ async fn verify_login(username: &String, password: &String) ->  bool {
     return false;
 }
 
-#[derive(Deserialize)]
-struct LoginRequest {
-	username: String,
-	password: String,
-}
-
-#[derive(Serialize)]
-struct LoginMessage {
-	id: u32,
-	codice_fiscale: String,
-}
-
-async fn do_login(Json(payload): Json<LoginRequest>) -> StatusCode {
+async fn do_login(Json(payload): Json<LoginRequest>) -> (StatusCode, Json<Person>) {
 
     println!("received username: {}", payload.username);
     println!("received password: {}", payload.password);
 
-    let p = create_user(&payload.username, &payload.password).await;
-    println!("{:?}", p);
-
-    if verify_login(&payload.username, &payload.password).await {
-    	return StatusCode::CREATED;	
+    if verify_login(payload.username.clone(), payload.password.clone()).await {
+    	let p = create_user(payload.username, payload.password).await.unwrap();
+    	return (StatusCode::CREATED, Json(p));	
     }
 
-    return StatusCode::NOT_FOUND;
+    return (StatusCode::NOT_FOUND, Json(Person::default()));
 }
 
 /*
