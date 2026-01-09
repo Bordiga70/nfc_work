@@ -1,57 +1,82 @@
-
-/*
 use axum::{
-    routing::get,
-    Router,
+    routing::{get, post},
+    http::StatusCode,
+    Router, Json,
+};
+
+use sqlite::{
+	State,
+	Connection,
+};
+
+use std::fmt::{
+	Debug,
+	Formatter,
+};
+
+use serde::{
+	Serialize,
+	Deserialize,
 };
 
 #[tokio::main]
 async fn main() {
-let app = Router::new()
-    .route("/login", get(get_login))
-    .route("/presenza", get(get_foo));
+
+
+    let app = Router::new()
+    	.route("/login", post(test));
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();
     println!("server ready!");
     axum::serve(listener, app).await.unwrap();
 }
 
-async fn get_login() -> &'static str {
-    println!("foo");
-    return "foo";
+fn connect_to_db(path: &str) -> Connection {
+	let connection = match sqlite::open(path) {
+		Ok(connection) => connection,
+		Err(_) => panic!("Impossibile connettersi al DB"),
+	};
+	connection
 }
-async fn get_foo() -> &'static str {
-    "foo foo"
+async fn check_login(username: &String, password: &String) ->  bool {
+    let connection = connect_to_db(r"data.db");
+
+    let query = "SELECT * FROM Login";
+    let mut statement = connection.prepare(query).unwrap();
+
+    while let Ok(State::Row) = statement.next() {
+	let current_username = statement.read::<String, _>("username").unwrap();
+ 	let current_password = statement.read::<String, _>("password").unwrap();
+
+	if current_username == *username && current_password == *password {
+			return true;
+		}
+    }
+    return false;
 }
-*/
 
-use postgres::{Client, NoTls};
+async fn test(Json(payload): Json<LoginRequest>) -> (StatusCode, Json<CreateLoginResponse>) {
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+     println!("{}", payload.username);
+     println!("{}", payload.password);
 
-let mut client = Client::connect("host=localhost user=postgres", NoTls)?;
+    let l = CreateLoginResponse{
+	message: format!("message"),
+	};
 
-client.batch_execute("
-    CREATE TABLE person (
-        id      SERIAL PRIMARY KEY,
-        name    TEXT NOT NULL,
-        data    BYTEA
-    )
-")?;
-
-let name = "Ferris";
-let data = None::<&[u8]>;
-client.execute(
-    "INSERT INTO person (name, data) VALUES ($1, $2)",
-    &[&name, &data],
-)?;
-
-for row in client.query("SELECT id, name, data FROM person", &[])? {
-    let id: i32 = row.get(0);
-    let name: &str = row.get(1);
-    let data: Option<&[u8]> = row.get(2);
-
-    println!("found person: {} {} {:?}", id, name, data);
+    if check_login(&payload.username, &payload.password).await {
+    return (StatusCode::CREATED, Json(l));	
 }
-Ok(())
+return (StatusCode::NOT_FOUND, Json(l));
+}
+
+#[derive(Deserialize)]
+struct LoginRequest {
+	username: String,
+	password: String,
+}
+
+#[derive(Serialize)]
+struct CreateLoginResponse {
+	message: String,
 }

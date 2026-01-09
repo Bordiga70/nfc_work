@@ -6,4 +6,5 @@ edition = "2024"
 [dependencies]
 axum="0.8.8"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-postgres = "0.19.12"
+sqlite = "0.37.0"
+serde = { version = "1.0.228", features = ["derive"] } 

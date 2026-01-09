@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:untitled/pages/nfc_page.dart';
+import 'package:untitled/widgets/dialog_widget.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -11,6 +15,20 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   TextEditingController userController = TextEditingController();
   TextEditingController pswController = TextEditingController();
+  static const String url = '127.0.0.1:3000';
+
+  Future<http.Response> sendLogin() {
+    return http.post(
+      Uri.http(url, '/login'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'username': userController.text,
+        'password': pswController.text,
+      }),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,12 +61,12 @@ class _LoginPageState extends State<LoginPage> {
               SizedBox(
                 width: 150,
                 height: 50,
-                child: TextButton(
-                  onPressed: () {
+                child: ElevatedButton(
+                  onPressed: () async {
+                    var response = await sendLogin();
                     if (userController.text.isNotEmpty &&
-                        pswController.text.isNotEmpty) {
-                      print('Username: ${userController.text}');
-                      print('Password: ${pswController.text}');
+                        pswController.text.isNotEmpty &&
+                        response.statusCode == 201) {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
@@ -57,6 +75,8 @@ class _LoginPageState extends State<LoginPage> {
                           },
                         ),
                       );
+                    } else {
+                      DialogWidget().dialog(context);
                     }
                   },
                   child: Text('Login'),
