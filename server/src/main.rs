@@ -9,11 +9,6 @@ use sqlite::{
     Connection,
 };
 
-use std::fmt::{
-    Debug,
-    Formatter,
-};
-
 use serde::{
     Serialize,
     Deserialize,
