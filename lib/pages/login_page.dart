@@ -71,13 +71,12 @@ class _LoginPageState extends State<LoginPage> {
                         response.statusCode == 201) {
                       final userMap =
                           jsonDecode(response.body) as Map<String, dynamic>;
-                      final user = UserData.fromJson(userMap);
-                      print(user.cognome);
+                      final userData = UserData.fromJson(userMap);
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
                           builder: (context) {
-                            return NfcPage();
+                            return NfcPage(data: userData);
                           },
                         ),
                       );

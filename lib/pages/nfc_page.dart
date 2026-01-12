@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:untitled/data/user_data.dart';
 
 class NfcPage extends StatefulWidget {
-  const NfcPage({super.key});
+  final UserData data;
+
+  const NfcPage({super.key, required this.data});
 
   @override
   State<NfcPage> createState() => _NfcPageState();
@@ -24,7 +27,16 @@ class _NfcPageState extends State<NfcPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Center(child: Text('Request'))),
+      appBar: AppBar(
+        title: Center(
+          child: Column(
+            children: [
+              Text('Connesso come: ${widget.data.nome} ${widget.data.cognome}'),
+              Text('${widget.data.codice_fiscale}'),
+            ],
+          ),
+        ),
+      ),
       body: Center(
         child: Center(
           child: Column(
