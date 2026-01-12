@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_nfc_kit/flutter_nfc_kit.dart';
 import 'package:http/http.dart' as http;
 import 'package:untitled/data/user_data.dart';
 
@@ -21,14 +22,16 @@ class NfcPage extends StatefulWidget {
 class _NfcPageState extends State<NfcPage> {
   static const String _url = "${UrlCostant.url}:${UrlCostant.port}";
 
-  // Future<void> _readNFCTag() async {
-  //   try {
-  //     NFCTag tag = await FlutterNfcKit.poll();
-  //     print('NFC Tag Found: ${tag.id}');
-  //   } catch (e) {
-  //     print('Error reading NFC tag: $e');
-  //   }
-  // }
+  Future<bool> _readNFCTag() async {
+    try {
+      NFCTag tag = await FlutterNfcKit.poll();
+      print('NFC TAG FOUND: ${tag.id}');
+      return true;
+    } catch (e) {
+      print('Error reading NFC tag: $e');
+      return false;
+    }
+  }
 
   Future<http.Response?> _sendData() async {
     try {
@@ -83,9 +86,10 @@ class _NfcPageState extends State<NfcPage> {
                 child: ElevatedButton(
                   onPressed: () async {
                     var response = await _sendData();
-                    //await _readNFCTag();
+                    var scanned = await _readNFCTag();
+
                     if (response != null) {
-                      if (response.statusCode == 201) {
+                      if (response.statusCode == 201 && scanned) {
                         if (context.mounted) {
                           DialogWidget.dialog(
                             context,
