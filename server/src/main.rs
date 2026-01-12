@@ -35,15 +35,16 @@ struct LoginRequest {
 	password: String,
 }
 
+const IP: &str = "127.0.0.1:3000";
+const PATH: &str = "data.db";
+
 #[tokio::main]
 async fn main() {
     let app = Router::new()
     	.route("/login", post(do_login))
     	.route("/verify", post(verify_user));
-	
-	let url: String = format!("127.0.0.1:3000");
 
-    let listener = tokio::net::TcpListener::bind(url).await.expect("Cannot bind to {url}");
+    let listener = tokio::net::TcpListener::bind(IP).await.expect("Cannot bind to {IP}");
     println!("server ready!");
     axum::serve(listener, app).await.expect("Error starting the server");
 }
@@ -54,7 +55,7 @@ fn connect_to_db(path: &str) -> Connection {
 }
 
 async fn create_user(username: String, password: String) -> Option<Person> {
-	let connection = connect_to_db(r"data.db");
+	let connection = connect_to_db(PATH);
 	
     let query =	format!("SELECT id_persona FROM Login WHERE username = '{username}' AND password = '{password}'");
     let mut statement = connection.prepare(query).unwrap();
@@ -82,7 +83,7 @@ async fn create_user(username: String, password: String) -> Option<Person> {
 }
 
 async fn verify_login(username: String, password: String) ->  bool {
-	let connection = connect_to_db(r"data.db");
+	let connection = connect_to_db(PATH);
 	
     let query =	format!("SELECT id_persona FROM Login WHERE username = '{username}' AND password = '{password}'");
     let mut statement = connection.prepare(query).unwrap();
@@ -107,7 +108,7 @@ async fn do_login(Json(payload): Json<LoginRequest>) -> (StatusCode, Json<Person
 }
 
 async fn verify_user(Json(payload): Json<Person>) -> StatusCode {
-	let connection = connect_to_db(r"data.db");
+	let connection = connect_to_db(PATH);
 	let id: i64 = payload.id;
 	
 	let query = format!("
