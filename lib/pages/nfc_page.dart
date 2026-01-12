@@ -83,28 +83,28 @@ class _NfcPageState extends State<NfcPage> {
                   onPressed: () async {
                     var response = await _sendData();
                     //await _readNFCTag();
-                    if (context.mounted) {
-                      if (response != null) {
-                        if (response.statusCode == 201) {
+                    if (response != null) {
+                      if (response.statusCode == 201) {
+                        if (context.mounted) {
                           DialogWidget.dialog(
                             context,
                             'Attenzione',
                             'Verifica effettuata correttamente',
                           );
-                        } else {
-                          DialogWidget.dialog(
-                            context,
-                            'Errore',
-                            'Impossibile effettuare la verifica',
-                          );
                         }
-                      } else {
+                      } else if (context.mounted) {
                         DialogWidget.dialog(
                           context,
                           'Errore',
-                          'Impossibile connettersi al server',
+                          'Impossibile effettuare la verifica',
                         );
                       }
+                    } else if (context.mounted) {
+                      DialogWidget.dialog(
+                        context,
+                        'Errore',
+                        'Impossibile connettersi al server',
+                      );
                     }
                   },
                   child: Text('Connect'),
