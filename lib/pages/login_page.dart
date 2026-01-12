@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -19,17 +21,32 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController pswController = TextEditingController();
   static const String url = '127.0.0.1:3000';
 
-  Future<http.Response> sendLogin() {
-    return http.post(
-      Uri.http(url, '/login'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'username': userController.text,
-        'password': pswController.text,
-      }),
-    );
+  Future<http.Response?> sendLogin() async {
+    try {
+      final response = await http
+          .post(
+            Uri.http(url, '/login'),
+            headers: <String, String>{
+              'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: jsonEncode(<String, String>{
+              'username': userController.text,
+              'password': pswController.text,
+            }),
+          )
+          .timeout(const Duration(seconds: 5));
+
+      return response;
+    } on SocketException {
+      debugPrint('No Internet or server unreachable');
+      return null;
+    } on TimeoutException {
+      debugPrint('Connection timeout');
+      return null;
+    } catch (e) {
+      debugPrint('Unexpected error: $e');
+      return null;
+    }
   }
 
   @override
@@ -66,22 +83,35 @@ class _LoginPageState extends State<LoginPage> {
                 child: ElevatedButton(
                   onPressed: () async {
                     var response = await sendLogin();
-                    if (userController.text.isNotEmpty &&
-                        pswController.text.isNotEmpty &&
-                        response.statusCode == 201) {
-                      final userMap =
-                          jsonDecode(response.body) as Map<String, dynamic>;
-                      final userData = UserData.fromJson(userMap);
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return NfcPage(data: userData);
-                          },
-                        ),
-                      );
+
+                    if (response != null) {
+                      if (pswController.text.isNotEmpty &&
+                          userController.text.isNotEmpty &&
+                          response.statusCode == 201) {
+                        final userMap =
+                            jsonDecode(response.body) as Map<String, dynamic>;
+                        final userData = UserData.fromJson(userMap);
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return NfcPage(data: userData);
+                            },
+                          ),
+                        );
+                      } else {
+                        DialogWidget.dialog(
+                          context,
+                          'Errore',
+                          'Credenziali errate',
+                        );
+                      }
                     } else {
-                      DialogWidget().dialog(context);
+                      DialogWidget.dialog(
+                        context,
+                        'Errore',
+                        'Impossibile connettersi al server',
+                      );
                     }
                   },
                   child: Text('Login'),

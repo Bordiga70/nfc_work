@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 class DialogWidget {
-  Future<String?> dialog(context) {
+  static Future<String?> dialog(context, String title, String description) {
     return showDialog<String>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
-        title: const Text('Errore'),
-        content: const Text('Credenziali Errate'),
+        title: Text(title),
+        content: Text(description),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.pop(context, 'Cancel'),

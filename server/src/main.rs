@@ -99,10 +99,6 @@ async fn verify_login(username: String, password: String) ->  bool {
 }
 
 async fn do_login(Json(payload): Json<LoginRequest>) -> (StatusCode, Json<Person>) {
-
-    println!("received username: {}", payload.username);
-    println!("received password: {}", payload.password);
-
     if verify_login(payload.username.clone(), payload.password.clone()).await {
     	let p = create_user(payload.username, payload.password).await.unwrap();
     	return (StatusCode::CREATED, Json(p));	
