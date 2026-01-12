@@ -24,7 +24,9 @@ class _NfcPageState extends State<NfcPage> {
 
   Future<bool> _readNFCTag() async {
     try {
-      NFCTag tag = await FlutterNfcKit.poll();
+      NFCTag tag = await FlutterNfcKit.poll().timeout(
+        const Duration(seconds: 5),
+      );
       print('NFC TAG FOUND: ${tag.id}');
       return true;
     } catch (e) {
@@ -85,30 +87,37 @@ class _NfcPageState extends State<NfcPage> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () async {
-                    var response = await _sendData();
                     var scanned = await _readNFCTag();
-
-                    if (response != null) {
-                      if (response.statusCode == 201 && scanned) {
-                        if (context.mounted) {
+                    if (scanned) {
+                      var response = await _sendData();
+                      if (response != null) {
+                        if (response.statusCode == 201) {
+                          if (context.mounted) {
+                            DialogWidget.dialog(
+                              context,
+                              'Attenzione',
+                              'Verifica effettuata correttamente',
+                            );
+                          }
+                        } else if (context.mounted) {
                           DialogWidget.dialog(
                             context,
-                            'Attenzione',
-                            'Verifica effettuata correttamente',
+                            'Errore',
+                            'Impossibile effettuare la verifica',
                           );
                         }
                       } else if (context.mounted) {
                         DialogWidget.dialog(
                           context,
                           'Errore',
-                          'Impossibile effettuare la verifica',
+                          'Impossibile connettersi al server',
                         );
                       }
                     } else if (context.mounted) {
                       DialogWidget.dialog(
                         context,
                         'Errore',
-                        'Impossibile connettersi al server',
+                        'Impossibile leggere il codice',
                       );
                     }
                   },
