@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:untitled/data/user_data.dart';
 
+import '../data/constants.dart';
 import '../widgets/dialog_widget.dart';
 
 class NfcPage extends StatefulWidget {
@@ -18,7 +19,7 @@ class NfcPage extends StatefulWidget {
 }
 
 class _NfcPageState extends State<NfcPage> {
-  static const String _url = '127.0.0.1:3000';
+  static const String _url = "${UrlCostant.url}:${UrlCostant.port}";
 
   // Future<void> _readNFCTag() async {
   //   try {

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:untitled/data/constants.dart';
 import 'package:untitled/pages/nfc_page.dart';
 import 'package:untitled/widgets/dialog_widget.dart';
 
@@ -20,7 +21,8 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _userController = TextEditingController();
   final TextEditingController _pswController = TextEditingController();
-  static const String _url = '127.0.0.1:3000';
+
+  static const String _url = "${UrlCostant.url}:${UrlCostant.port}";
   bool _isChecked = false;
 
   @override
