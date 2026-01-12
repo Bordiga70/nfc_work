@@ -20,6 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController userController = TextEditingController();
   TextEditingController pswController = TextEditingController();
   static const String url = '127.0.0.1:3000';
+  bool isChecked = false;
 
   Future<http.Response?> sendLogin() async {
     try {
@@ -52,7 +53,10 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Center(child: Text('Login'))),
+      appBar: AppBar(
+        title: Center(child: Text('Login')),
+        backgroundColor: Colors.teal,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Center(
@@ -77,45 +81,63 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               SizedBox(height: 20),
-              SizedBox(
-                width: 150,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    var response = await sendLogin();
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 150,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        var response = await sendLogin();
 
-                    if (response != null) {
-                      if (pswController.text.isNotEmpty &&
-                          userController.text.isNotEmpty &&
-                          response.statusCode == 201) {
-                        final userMap =
-                            jsonDecode(response.body) as Map<String, dynamic>;
-                        final userData = UserData.fromJson(userMap);
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) {
-                              return NfcPage(data: userData);
-                            },
-                          ),
-                        );
-                      } else {
-                        DialogWidget.dialog(
-                          context,
-                          'Errore',
-                          'Credenziali errate',
-                        );
-                      }
-                    } else {
-                      DialogWidget.dialog(
-                        context,
-                        'Errore',
-                        'Impossibile connettersi al server',
-                      );
-                    }
-                  },
-                  child: Text('Login'),
-                ),
+                        String username = userController.text;
+                        String password = pswController.text;
+
+                        if (response != null) {
+                          if (username.isNotEmpty &&
+                              password.isNotEmpty &&
+                              response.statusCode == 201) {
+                            final userMap =
+                                jsonDecode(response.body)
+                                    as Map<String, dynamic>;
+                            final userData = UserData.fromJson(userMap);
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) {
+                                  return NfcPage(data: userData);
+                                },
+                              ),
+                            );
+                          } else {
+                            DialogWidget.dialog(
+                              context,
+                              'Errore',
+                              'Credenziali errate',
+                            );
+                          }
+                        } else {
+                          DialogWidget.dialog(
+                            context,
+                            'Errore',
+                            'Impossibile connettersi al server',
+                          );
+                        }
+                      },
+                      child: Text('Login'),
+                    ),
+                  ),
+                  Checkbox(
+                    value: isChecked,
+                    onChanged: (value) {
+                      setState(() {
+                        isChecked = !isChecked;
+                      });
+                    },
+                  ),
+                  const Text('Salvare le credenziali'),
+                ],
               ),
             ],
           ),

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
 class DialogWidget {
-  static Future<String?> dialog(context, String title, String description) {
+  static Future<String?> dialog(
+    dynamic context,
+    String title,
+    String description,
+  ) {
     return showDialog<String>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
