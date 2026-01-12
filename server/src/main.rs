@@ -14,6 +14,7 @@ use serde::{
     Deserialize,
 };
 
+#[derive(Deserialize)]
 #[derive(Serialize)]
 struct Person {
 	id: i64,
@@ -37,8 +38,8 @@ struct LoginRequest {
 #[tokio::main]
 async fn main() {
     let app = Router::new()
-    	.route("/login", post(do_login));
-    //	.route("/verify", post(test))
+    	.route("/login", post(do_login))
+    	.route("/verify", post(test));
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();
     println!("server ready!");
@@ -110,16 +111,41 @@ async fn do_login(Json(payload): Json<LoginRequest>) -> (StatusCode, Json<Person
     return (StatusCode::NOT_FOUND, Json(Person::default()));
 }
 
-/*
 async fn test(Json(payload): Json<Person>) -> StatusCode {
+	let connection = connect_to_db(r"data.db");
+	let id: i64 = payload.id;
+	
+	let query = format!("
+		INSERT OR IGNORE INTO Presenza (id_persona, data)
+		VALUES ({id}, DATE('now', 'localtime'));
 
-    println!("received id: {}", payload.id);
-    println!("received codice_fiscale: {}", payload.codice_fiscale);
-
-    let connection = connect_to_db(r"data.db");
-    let query = format!("INSERT INTO Presenza VALUES("{0}", NOW())", payload.id);
-    connection.execute(query).unwrap();
-
-    return StatusCode::NOT_FOUND;
+		INSERT INTO Timbratura (id_presenza, tipo, orario)
+		SELECT
+			p.id_presenza,
+			CASE
+				WHEN (
+					SELECT t.tipo
+					FROM Timbratura t
+					WHERE t.id_presenza = p.id_presenza
+					ORDER BY t.orario DESC
+					LIMIT 1
+				) IS NULL THEN 'entrata'
+				WHEN (
+					SELECT t.tipo
+					FROM Timbratura t
+					WHERE t.id_presenza = p.id_presenza
+					ORDER BY t.orario DESC
+					LIMIT 1
+				) = 'uscita' THEN 'entrata'
+				ELSE 'uscita'
+			END,
+			DATETIME('now', 'localtime')
+		FROM Presenza p
+		WHERE p.id_persona = {id}
+		  AND p.data = DATE('now', 'localtime');
+	");
+	
+	connection.execute(query).unwrap();
+	
+    return StatusCode::CREATED;
 }
-*/

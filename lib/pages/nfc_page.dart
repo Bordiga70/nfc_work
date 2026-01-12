@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:untitled/data/user_data.dart';
@@ -24,6 +26,21 @@ class _NfcPageState extends State<NfcPage> {
   //   }
   // }
 
+  Future<http.Response> sendData() {
+    return http.post(
+      Uri.http(url, '/verify'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, dynamic>{
+        'id': widget.data.id,
+        'codice_fiscale': widget.data.codice_fiscale,
+        'nome': widget.data.nome,
+        'cognome': widget.data.cognome,
+      }),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,7 +65,7 @@ class _NfcPageState extends State<NfcPage> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () async {
-                    var response = await http.get(new Uri.http(url, '/verify'));
+                    var response = await sendData();
                     print(response.statusCode);
                     if (response.statusCode == 201) {
                       setState(() {
