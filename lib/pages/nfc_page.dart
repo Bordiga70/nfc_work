@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_nfc_kit/flutter_nfc_kit.dart';
 import 'package:http/http.dart' as http;
 import 'package:untitled/data/user_data.dart';
 
@@ -19,22 +18,22 @@ class NfcPage extends StatefulWidget {
 }
 
 class _NfcPageState extends State<NfcPage> {
-  static const String url = '127.0.0.1:3000';
+  static const String _url = '127.0.0.1:3000';
 
-  Future<void> readNFCTag() async {
-    try {
-      NFCTag tag = await FlutterNfcKit.poll();
-      print('NFC Tag Found: ${tag.id}');
-    } catch (e) {
-      print('Error reading NFC tag: $e');
-    }
-  }
+  // Future<void> _readNFCTag() async {
+  //   try {
+  //     NFCTag tag = await FlutterNfcKit.poll();
+  //     print('NFC Tag Found: ${tag.id}');
+  //   } catch (e) {
+  //     print('Error reading NFC tag: $e');
+  //   }
+  // }
 
-  Future<http.Response?> sendData() async {
+  Future<http.Response?> _sendData() async {
     try {
       final response = await http
           .post(
-            Uri.http(url, '/verify'),
+            Uri.http(_url, '/verify'),
             headers: {'Content-Type': 'application/json; charset=UTF-8'},
             body: jsonEncode({
               'id': widget.data.id,
@@ -82,29 +81,30 @@ class _NfcPageState extends State<NfcPage> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () async {
-                    var response = await sendData();
-                    await readNFCTag();
-
-                    if (response != null) {
-                      if (response.statusCode == 201) {
-                        DialogWidget.dialog(
-                          context,
-                          'Attenzione',
-                          'Verifica effettuata correttamente',
-                        );
+                    var response = await _sendData();
+                    //await _readNFCTag();
+                    if (context.mounted) {
+                      if (response != null) {
+                        if (response.statusCode == 201) {
+                          DialogWidget.dialog(
+                            context,
+                            'Attenzione',
+                            'Verifica effettuata correttamente',
+                          );
+                        } else {
+                          DialogWidget.dialog(
+                            context,
+                            'Errore',
+                            'Impossibile effettuare la verifica',
+                          );
+                        }
                       } else {
                         DialogWidget.dialog(
                           context,
                           'Errore',
-                          'Impossibile effettuare la verifica',
+                          'Impossibile connettersi al server',
                         );
                       }
-                    } else {
-                      DialogWidget.dialog(
-                        context,
-                        'Errore',
-                        'Impossibile connettersi al server',
-                      );
                     }
                   },
                   child: Text('Connect'),

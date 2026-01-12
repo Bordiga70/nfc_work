@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/pages/nfc_page.dart';
 import 'package:untitled/widgets/dialog_widget.dart';
 
@@ -17,22 +18,28 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  TextEditingController userController = TextEditingController();
-  TextEditingController pswController = TextEditingController();
-  static const String url = '127.0.0.1:3000';
-  bool isChecked = false;
+  final TextEditingController _userController = TextEditingController();
+  final TextEditingController _pswController = TextEditingController();
+  static const String _url = '127.0.0.1:3000';
+  bool _isChecked = false;
 
-  Future<http.Response?> sendLogin() async {
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLogin();
+  }
+
+  Future<http.Response?> _sendLogin() async {
     try {
       final response = await http
           .post(
-            Uri.http(url, '/login'),
+            Uri.http(_url, '/login'),
             headers: <String, String>{
               'Content-Type': 'application/json; charset=UTF-8',
             },
             body: jsonEncode(<String, String>{
-              'username': userController.text,
-              'password': pswController.text,
+              'username': _userController.text,
+              'password': _pswController.text,
             }),
           )
           .timeout(const Duration(seconds: 5));
@@ -50,6 +57,20 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> _saveLogin(String username, String password) async {
+    if (_isChecked) {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString('username', username);
+      prefs.setString('password', password);
+    }
+  }
+
+  Future<void> _loadSavedLogin() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    _userController.text = prefs.getString('username')!;
+    _pswController.text = prefs.getString('password')!;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,7 +86,7 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               TextField(
                 textAlign: TextAlign.center,
-                controller: userController,
+                controller: _userController,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'nome utente',
@@ -74,7 +95,7 @@ class _LoginPageState extends State<LoginPage> {
               SizedBox(height: 50),
               TextField(
                 textAlign: TextAlign.center,
-                controller: pswController,
+                controller: _pswController,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'password',
@@ -89,35 +110,38 @@ class _LoginPageState extends State<LoginPage> {
                     height: 50,
                     child: ElevatedButton(
                       onPressed: () async {
-                        var response = await sendLogin();
+                        var response = await _sendLogin();
 
-                        String username = userController.text;
-                        String password = pswController.text;
+                        String username = _userController.text;
+                        String password = _pswController.text;
 
                         if (response != null) {
                           if (username.isNotEmpty &&
                               password.isNotEmpty &&
                               response.statusCode == 201) {
+                            _saveLogin(username, password);
                             final userMap =
                                 jsonDecode(response.body)
                                     as Map<String, dynamic>;
                             final userData = UserData.fromJson(userMap);
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) {
-                                  return NfcPage(data: userData);
-                                },
-                              ),
-                            );
-                          } else {
+                            if (context.mounted) {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) {
+                                    return NfcPage(data: userData);
+                                  },
+                                ),
+                              );
+                            }
+                          } else if (context.mounted) {
                             DialogWidget.dialog(
                               context,
                               'Errore',
                               'Credenziali errate',
                             );
                           }
-                        } else {
+                        } else if (context.mounted) {
                           DialogWidget.dialog(
                             context,
                             'Errore',
@@ -129,10 +153,10 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   Checkbox(
-                    value: isChecked,
+                    value: _isChecked,
                     onChanged: (value) {
                       setState(() {
-                        isChecked = !isChecked;
+                        _isChecked = !_isChecked;
                       });
                     },
                   ),
