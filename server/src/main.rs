@@ -35,7 +35,7 @@ struct LoginRequest {
 	password: String,
 }
 
-const IP: &str = "127.0.0.1:3000";
+const IP: &str = "10.0.1.109:3000";
 const PATH: &str = "data.db";
 
 #[tokio::main]
@@ -110,6 +110,8 @@ async fn do_login(Json(payload): Json<LoginRequest>) -> (StatusCode, Json<Person
 async fn verify_user(Json(payload): Json<Person>) -> StatusCode {
 	let connection = connect_to_db(PATH);
 	let id: i64 = payload.id;
+	
+	println!("verified user: {id}");
 	
 	let query = format!("
 		INSERT OR IGNORE INTO Presenza (id_persona, data)

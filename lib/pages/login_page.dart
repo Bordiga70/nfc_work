@@ -25,12 +25,6 @@ class _LoginPageState extends State<LoginPage> {
   static const String _url = "${UrlCostant.url}:${UrlCostant.port}";
   bool _isChecked = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadSavedLogin();
-  }
-
   Future<http.Response?> _sendLogin() async {
     try {
       final response = await http
@@ -71,6 +65,19 @@ class _LoginPageState extends State<LoginPage> {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     _userController.text = prefs.getString('username')!;
     _pswController.text = prefs.getString('password')!;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLogin();
+  }
+
+  @override
+  void dispose() {
+    _userController.dispose();
+    _pswController.dispose();
+    super.dispose();
   }
 
   @override
