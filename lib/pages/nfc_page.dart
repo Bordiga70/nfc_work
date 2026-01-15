@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'Options.dart';
+
 class NfcPage extends StatefulWidget {
   const NfcPage({super.key});
 
@@ -14,7 +16,7 @@ class _NfcPageState extends State<NfcPage> {
   String _currentDate = "";
   String _currentTime = "";
 
-  void currentTime(now) {
+  void currentTime(DateTime now) {
     Timer.periodic(Duration(minutes: 1), (timer) {
       var currentDate = DateTime.now();
       setState(() {
@@ -23,7 +25,7 @@ class _NfcPageState extends State<NfcPage> {
     });
   }
 
-  void currentDay(now) {
+  void currentDay(DateTime now) {
     Timer.periodic(Duration(hours: 1), (timer) {
       setState(() {
         _currentDate = DateFormat('yy-MM-dd').format(now);
@@ -49,12 +51,31 @@ class _NfcPageState extends State<NfcPage> {
         backgroundColor: Colors.teal,
         title: Center(
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Column(children: [Text(_currentTime), Text(_currentDate)]),
+              CircleAvatar(
+                radius: 18,
+                backgroundImage: AssetImage('assets/icon.png'),
+              ),
+              Column(children: [Text(_currentDate), Text(_currentTime)]),
             ],
           ),
         ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return Options();
+                  },
+                ),
+              );
+            },
+            icon: const Icon(Icons.add_circle_outlined),
+          ),
+        ],
       ),
       body: Center(),
     );
