@@ -1,5 +1,5 @@
 use axum::{
-    routing::{post},
+    routing::{post, get},
     http::StatusCode,
     Router, Json,
 };
@@ -27,6 +27,23 @@ impl Default for Person {
 	fn default() -> Person {
     		Person { id: 0, codice_fiscale: format!("DEFAULT"), nome: format!("DEFAULT"), cognome: format!("DEFAULT") }
     }
+}
+
+#[derive(Deserialize)]
+#[derive(Serialize)]
+struct Timbratura {
+	id_timbratura: i64,
+	id_presenza: i64,
+	tipo: String,
+	orario: String,
+}
+
+#[derive(Deserialize)]
+#[derive(Serialize)]
+struct Presenza {
+	id_presenza: i64,
+	id_persona: i64,
+	data: String,
 }
 
 #[derive(Deserialize)]
