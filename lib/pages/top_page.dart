@@ -19,11 +19,12 @@ class _TopPageState extends State<TopPage> {
   String _currentDate = "";
   String _currentTime = "";
 
-  void _updateDateAndTime(DateTime now) {
+  void _updateDateAndTime() {
     Timer.periodic(Duration(seconds: 30), (timer) {
+      var currentDate = DateTime.now();
       setState(() {
-        _currentTime = DateFormat.Hm().format(now);
-        _currentDate = DateFormat('yy-MM-dd').format(now);
+        _currentTime = DateFormat.Hm().format(currentDate);
+        _currentDate = DateFormat('yy-MM-dd').format(currentDate);
       });
     });
   }
@@ -33,7 +34,7 @@ class _TopPageState extends State<TopPage> {
     var currentDate = DateTime.now();
     _currentDate = DateFormat('yy-MM-dd').format(currentDate);
     _currentTime = DateFormat.Hm().format(currentDate);
-    _updateDateAndTime(currentDate);
+    _updateDateAndTime();
     super.initState();
   }
 

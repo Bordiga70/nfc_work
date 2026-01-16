@@ -1,12 +1,12 @@
-use axum::{
-    routing::{post, get},
-    http::StatusCode,
-    Router, Json,
-};
+use sqlx::sqlite::SqlitePool;
 
-use sqlite::{
-    State,
-    Connection,
+
+use::axum::{
+	Router,
+	routing::{post},
+	extract::State,
+	response::Json,
+	http::StatusCode,
 };
 
 use serde::{
@@ -14,153 +14,119 @@ use serde::{
     Deserialize,
 };
 
-#[derive(Deserialize)]
-#[derive(Serialize)]
-struct Person {
-	id: i64,
-	codice_fiscale: String,
-	nome: String,
-	cognome: String,
-}
-
-impl Default for Person {
-	fn default() -> Person {
-    		Person { id: 0, codice_fiscale: format!("DEFAULT"), nome: format!("DEFAULT"), cognome: format!("DEFAULT") }
-    }
-}
-
-#[derive(Deserialize)]
-#[derive(Serialize)]
-struct Timbratura {
-	id_timbratura: i64,
-	id_presenza: i64,
-	tipo: String,
-	orario: String,
-}
-
-#[derive(Deserialize)]
-#[derive(Serialize)]
-struct Presenza {
-	id_presenza: i64,
-	id_persona: i64,
-	data: String,
-}
-
-#[derive(Deserialize)]
-struct LoginRequest {
-	username: String,
-	password: String,
-}
-
 const IP: &str = "10.0.1.109:3000";
-const PATH: &str = "data.db";
 
 #[tokio::main]
-async fn main() {
-    let app = Router::new()
+async fn main() -> Result<(), sqlx::Error> {
+    let pool: SqlitePool = SqlitePool::connect_lazy("data.db").expect("Can't open database");
+	
+	let app = Router::new()
     	.route("/login", post(do_login))
-    	.route("/verify", post(verify_user));
-
-    let listener = tokio::net::TcpListener::bind(IP).await.expect("Cannot bind to {IP}");
+		.route("/new", post(create_user))
+		.with_state(pool);
+	
+	let listener = tokio::net::TcpListener::bind(IP).await.expect("Cannot bind to {IP}");
     println!("server ready!");
     axum::serve(listener, app).await.expect("Error starting the server");
+
+
+    Ok(())
 }
 
-fn connect_to_db(path: &str) -> Connection {
-     let connection = sqlite::open(path).expect("Cannot connect to DB");
-     return connection;
+#[derive(Deserialize)]
+#[derive(Serialize)]
+struct User {
+	tag: String,
 }
 
-async fn create_user(username: String, password: String) -> Option<Person> {
-	let connection = connect_to_db(PATH);
+async fn do_login(State(pool): State<SqlitePool>, Json(payload): Json<User>) -> StatusCode {
+
+	let user = User {
+		tag: payload.tag,
+	};
+	let mut conn = pool.acquire().await.unwrap();
 	
-    let query =	format!("SELECT id_persona FROM Login WHERE username = '{username}' AND password = '{password}'");
-    let mut statement = connection.prepare(query).unwrap();
-
-    if statement.next().unwrap() != State::Row {
-		return None;
-    }
-
-    let person_id = statement.read::<i64, _>("id_persona").unwrap();
-    	
-    let query = format!("SELECT * FROM Persona WHERE id = '{person_id}'");
-    let mut statement = connection.prepare(query).unwrap();
-    
-    if statement.next().unwrap() != State::Row {
-		return None;
-    }
-
-    let p = Person {
-		id: statement.read::<i64, _>("id").unwrap(),
-		codice_fiscale: statement.read::<String, _>("codice_fiscale").unwrap(),
-		nome: statement.read::<String, _>("nome").unwrap(),
-		cognome: statement.read::<String, _>("cognome").unwrap(),
-    	};
-    return Some(p);
-}
-
-async fn verify_login(username: String, password: String) ->  bool {
-	let connection = connect_to_db(PATH);
+	/*
 	
-    let query =	format!("SELECT id_persona FROM Login WHERE username = '{username}' AND password = '{password}'");
-    let mut statement = connection.prepare(query).unwrap();
+	let mut conn = pool.acquire().await.unwrap();
 
-    let _ = statement.next();
-    let person_id = statement.read::<i64, _>("id_persona").unwrap();
-
-    if person_id != 0 {
-    	return true;
-    }
-
-    return false;
-}
-
-async fn do_login(Json(payload): Json<LoginRequest>) -> (StatusCode, Json<Person>) {
-    if verify_login(payload.username.clone(), payload.password.clone()).await {
-    	let p = create_user(payload.username, payload.password).await.unwrap();
-    	return (StatusCode::CREATED, Json(p));	
-    }
-
-    return (StatusCode::NOT_FOUND, Json(Person::default()));
-}
-
-async fn verify_user(Json(payload): Json<Person>) -> StatusCode {
-	let connection = connect_to_db(PATH);
-	let id: i64 = payload.id;
 	
-	println!("verified user: {id}");
+	let exists = sqlx::query("SELECT 1 FROM Utente WHERE tag = ?")
+		.bind(&user.tag)
+		.fetch_optional(&mut *conn)
+		.await.expect("reason");
 	
-	let query = format!("
-		INSERT OR IGNORE INTO Presenza (id_persona, data)
-		VALUES ({id}, DATE('now', 'localtime'));
+	let mut conn = pool.acquire().await.unwrap();
+	*/
 
-		INSERT INTO Timbratura (id_presenza, tipo, orario)
-		SELECT
-			p.id_presenza,
-			CASE
-				WHEN (
-					SELECT t.tipo
-					FROM Timbratura t
-					WHERE t.id_presenza = p.id_presenza
-					ORDER BY t.orario DESC
-					LIMIT 1
-				) IS NULL THEN 'entrata'
-				WHEN (
-					SELECT t.tipo
-					FROM Timbratura t
-					WHERE t.id_presenza = p.id_presenza
-					ORDER BY t.orario DESC
-					LIMIT 1
-				) = 'uscita' THEN 'entrata'
+	sqlx::query(
+	r#"
+	
+		INSERT OR IGNORE INTO Presenza (tag, data)
+		VALUES ($1, DATE('now', 'localtime'));
+
+		WITH today AS (
+			SELECT id_presenza
+			FROM Presenza
+			WHERE tag = $1
+			  AND data = DATE('now', 'localtime')
+			LIMIT 1
+		)
+		INSERT INTO Timbro (id_presenza, tipo, orario)
+		SELECT 
+			t.id_presenza,
+			CASE 
+				WHEN last.tipo IS NULL          THEN 'entrata'
+				WHEN last.tipo = 'uscita'       THEN 'entrata'
 				ELSE 'uscita'
 			END,
 			DATETIME('now', 'localtime')
-		FROM Presenza p
-		WHERE p.id_persona = {id}
-		  AND p.data = DATE('now', 'localtime');
-	");
+		FROM today t
+		LEFT JOIN (
+			SELECT tipo
+			FROM Timbro
+			WHERE id_presenza = (SELECT id_presenza FROM today)
+			ORDER BY orario DESC
+			LIMIT 1
+		) last;
 	
-	connection.execute(query).unwrap();
+	"#
+	)
+	.bind(&user.tag)
+	.execute(&mut *conn)
+	.await;
 	
-    return StatusCode::CREATED;
+	return StatusCode::CREATED;
+}
+
+#[derive(Deserialize)]
+struct Test {
+	tag: String,
+	name: String,
+	surname: String
+}
+
+async fn create_user(State(pool): State<SqlitePool>, Json(payload): Json<Test>) -> StatusCode {
+	
+	let mut conn = pool.acquire().await.unwrap();
+	
+	let t = Test {
+		tag: payload.tag,
+		name: payload.name,
+		surname: payload.surname,
+	};
+	
+	sqlx::query(
+	r#"
+		INSERT INTO Utente (tag, nome, cognome)
+		VALUES ($1, $2, $3);
+	"#
+	)
+	.bind(t.tag)
+	.bind(t.name)
+	.bind(t.surname)
+	.execute(&mut *conn)
+	.await;
+	
+	return StatusCode::CREATED
 }

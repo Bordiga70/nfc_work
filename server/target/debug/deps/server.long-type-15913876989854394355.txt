@@ -1,2 +1,0 @@
-fn(Json<LoginRequest>) -> impl Future<Output = (StatusCode, std::option::Option<Json<Person>>)> {do_login}
-fn(Json<LoginRequest>) -> impl Future<Output = (StatusCode, std::option::Option<Json<Person>>)> {do_login}: Handler<_, _>

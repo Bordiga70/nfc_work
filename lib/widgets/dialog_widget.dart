@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:untitled/data/ip_handler.dart';
 
 class DialogWidget {
   final TextEditingController _controller = TextEditingController();
@@ -19,7 +20,7 @@ class DialogWidget {
           ),
           TextButton(
             onPressed: () {
-              print(_controller.text);
+              IpHandler().format(_controller.text);
               Navigator.pop(context, 'Ok');
             },
             child: const Text('Ok'),

@@ -1,0 +1,11 @@
+C:\Users\Imran\Documents\progetti\untitled\server\target\debug\deps\libsqlite3_sys-8182ce80b3c83825.d: C:\Users\Imran\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\libsqlite3-sys-0.30.1\src\lib.rs C:\Users\Imran\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\libsqlite3-sys-0.30.1\src\error.rs C:\Users\Imran\Documents\progetti\untitled\server\target\debug\build\libsqlite3-sys-1ff5f5171ce8594a\out/bindgen.rs
+
+C:\Users\Imran\Documents\progetti\untitled\server\target\debug\deps\liblibsqlite3_sys-8182ce80b3c83825.rlib: C:\Users\Imran\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\libsqlite3-sys-0.30.1\src\lib.rs C:\Users\Imran\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\libsqlite3-sys-0.30.1\src\error.rs C:\Users\Imran\Documents\progetti\untitled\server\target\debug\build\libsqlite3-sys-1ff5f5171ce8594a\out/bindgen.rs
+
+C:\Users\Imran\Documents\progetti\untitled\server\target\debug\deps\liblibsqlite3_sys-8182ce80b3c83825.rmeta: C:\Users\Imran\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\libsqlite3-sys-0.30.1\src\lib.rs C:\Users\Imran\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\libsqlite3-sys-0.30.1\src\error.rs C:\Users\Imran\Documents\progetti\untitled\server\target\debug\build\libsqlite3-sys-1ff5f5171ce8594a\out/bindgen.rs
+
+C:\Users\Imran\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\libsqlite3-sys-0.30.1\src\lib.rs:
+C:\Users\Imran\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\libsqlite3-sys-0.30.1\src\error.rs:
+C:\Users\Imran\Documents\progetti\untitled\server\target\debug\build\libsqlite3-sys-1ff5f5171ce8594a\out/bindgen.rs:
+
+# env-dep:OUT_DIR=C:\\Users\\Imran\\Documents\\progetti\\untitled\\server\\target\\debug\\build\\libsqlite3-sys-1ff5f5171ce8594a\\out
